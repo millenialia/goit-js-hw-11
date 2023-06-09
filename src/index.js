@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Notiflix, { Loading } from 'notiflix';
 
 const searchBtn = document.querySelector('#search')
 const searchForm = document.querySelector('.search-form')
@@ -17,24 +18,37 @@ loadMoreBtn.addEventListener('click', onLoadMore)
 
 loadMoreBtn.classList.add('is-hidden')
 
-function onSearch(event) {
+async function onSearch(event) {
   event.preventDefault()
   galleryEl.innerHTML = ''
   pageNum = 1
   keyword = event.currentTarget.elements[0].value;
-  fetchPhotoByKeyword(keyword)
-  loadMoreBtn.classList.remove('is-hidden')
+  const  data = await fetchPhotoByKeyword(keyword);
+  if (data.totalHits === 0) {
+    Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+  }
+  else {
+    loadMoreBtn.classList.remove('is-hidden')
+    Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+     renderPhotosCard(data.hits)
+  }
 }
 
-function onLoadMore(event) {
+async function onLoadMore(event) {
   pageNum += 1
-  fetchPhotoByKeyword(keyword)
+  const data = await fetchPhotoByKeyword(keyword);
+  renderPhotosCard(data.hits)
+  if (data.hits.length * pageNum >= data.totalHits) {
+    loadMoreBtn.classList.add('is-hidden')
+    Notiflix.Notify.failure(`We're sorry, but you've reached the end of search results.`);
+  }
 }
+
 
 
 async function fetchPhotoByKeyword(keyword) {
   try {
-    const response = await axios.get('', {
+    const {data} = await axios.get('', {
       baseURL: url,
       params: {
         key: APIKEY,
@@ -46,7 +60,9 @@ async function fetchPhotoByKeyword(keyword) {
         page: pageNum,
       }
     });
-    await renderPhotosCard(response.data.hits)
+
+    return data
+
   } catch (error) {
     console.error(error);
   }
