@@ -1,11 +1,11 @@
 import axios from 'axios';
 import Notiflix, { Loading } from 'notiflix';
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
 
-const searchBtn = document.querySelector('#search')
 const searchForm = document.querySelector('.search-form')
 const galleryEl = document.querySelector('.gallery')
 const loadMoreBtn = document.querySelector('.load-more')
-
 
 const APIKEY = '37129638-ec213efed10419ab76c2321de'
 const url = 'https://pixabay.com/api/'
@@ -44,8 +44,6 @@ async function onLoadMore(event) {
   }
 }
 
-
-
 async function fetchPhotoByKeyword(keyword) {
   try {
     const {data} = await axios.get('', {
@@ -79,7 +77,7 @@ function renderPhotosCard(photosArray) {
     const comments = photo.comments
     const downloads = photo.downloads
 
-    const renderCard = `<div class='photo-card'><img src=${smallImg} alt=${alt} class='img'>
+    const renderCard = `<div class='photo-card'><a href=${largeImg}><img src=${smallImg} alt=${alt} class='img'></a>
     <div class='list'>
     <p><b>Likes</b><br>${likes}</p>
     <p><b>Views</b><br>${views}</p>
@@ -88,5 +86,7 @@ function renderPhotosCard(photosArray) {
     </div></div>`
 
     galleryEl.innerHTML += renderCard
+
+    let lightbox = new SimpleLightbox('.gallery a');
   }
 }
