@@ -12,6 +12,7 @@ const url = 'https://pixabay.com/api/'
 const maxPhotos = 40
 let keyword = ''
 let pageNum = 0
+let lightbox = new SimpleLightbox('.gallery a');
 
 searchForm.addEventListener('submit', onSearch)
 loadMoreBtn.addEventListener('click', onLoadMore)
@@ -19,18 +20,24 @@ loadMoreBtn.addEventListener('click', onLoadMore)
 loadMoreBtn.classList.add('is-hidden')
 
 async function onSearch(event) {
+  loadMoreBtn.classList.add('is-hidden')
   event.preventDefault()
   galleryEl.innerHTML = ''
   pageNum = 1
   keyword = event.currentTarget.elements[0].value;
+  if (keyword.trim() === '') {
+    return
+  }
   const  data = await fetchPhotoByKeyword(keyword);
   if (data.totalHits === 0) {
+    loadMoreBtn.classList.add('is-hidden')
     Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
   }
   else {
-    loadMoreBtn.classList.remove('is-hidden')
     Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-     renderPhotosCard(data.hits)
+    renderPhotosCard(data.hits)
+    loadMoreBtn.classList.remove('is-hidden')
+    lightbox.refresh()
   }
 }
 
@@ -38,7 +45,9 @@ async function onLoadMore(event) {
   pageNum += 1
   const data = await fetchPhotoByKeyword(keyword);
   renderPhotosCard(data.hits)
-  if (data.hits.length * pageNum >= data.totalHits) {
+  lightbox.refresh()
+  const totalPages = Math.ceil(data.totalHits/maxPhotos)
+  if (pageNum == totalPages) {
     loadMoreBtn.classList.add('is-hidden')
     Notiflix.Notify.failure(`We're sorry, but you've reached the end of search results.`);
   }
@@ -85,8 +94,7 @@ function renderPhotosCard(photosArray) {
     <p><b>Downloads</b><br>${downloads}</p>
     </div></div>`
 
-    galleryEl.innerHTML += renderCard
+    galleryEl.insertAdjacentHTML("beforeend", renderCard)
 
-    let lightbox = new SimpleLightbox('.gallery a');
   }
 }
